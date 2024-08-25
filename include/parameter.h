@@ -1,6 +1,9 @@
 #ifndef PARAMETER_H
 #define PARAMETER_H
-
+/*
+ * Scanner의 시스템 매개변수와 ArduinoMega의 일반 제어 신호 Pin, 모터 제어 Pin을 저장
+ * 시스템 매개변수: 초기 좌표, 모터 정보, 각종 dimension, Exposure time, Scale down ratio 등
+ */
 #include <stdint.h>
 
 namespace Control {
@@ -29,17 +32,18 @@ namespace ArduinoMega {
     constexpr uint8_t kRestartButton    = 51; // Restart button port: Digital 51
     constexpr uint8_t kIrX              = 15; // x-axis IR sensor
     constexpr uint8_t kIrY              = 14; // y-axis IR sensor
+    constexpr uint8_t kFanPwr           = 49; // Cooling fan power relay control signal port Digital 49
 
     namespace MotorPin {
         constexpr uint8_t kEnableX      = 22; // Enable signal for the x-axis motor
         constexpr uint8_t kEnableY      = 23; // Enable signal for the y-axis motor
         constexpr uint8_t kEnableM      = 24; // Enable signal for the mask motor
-        constexpr uint8_t kStepX        = 2;
-        constexpr uint8_t kStepY        = 4;
-        constexpr uint8_t kStepM        = 6;
-        constexpr uint8_t kDirX         = 3;
-        constexpr uint8_t kDirY         = 5;
-        constexpr uint8_t kDirM         = 7;
+        constexpr uint8_t kStepX        = 2;  // Step signal for the x-axis motor
+        constexpr uint8_t kStepY        = 4;  // Step signal for the y-axis motor
+        constexpr uint8_t kStepM        = 6;  // Step signal for the mask motor
+        constexpr uint8_t kDirX         = 3;  // Direction signal for the x-axis motor
+        constexpr uint8_t kDirY         = 5;  // Direction signal for the y-axis motor
+        constexpr uint8_t kDirM         = 7;  // Direction signal for the mask motor
         constexpr uint8_t kMsX[]        = {25, 26, 27}; // Microstepping signal for the x-axis motor 
         constexpr uint8_t kMsY[]        = {28, 29, 30}; // Microstepping signal for the y-axis motor
         constexpr uint8_t kMsM[]        = {31, 32, 33}; // Microstepping signal for the mask motor 
