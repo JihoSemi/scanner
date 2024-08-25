@@ -48,21 +48,6 @@ scanner
   - `void Operate()`: 웨이퍼 전체에 걸쳐 공정을 1회 진행
   - `void WaitTillPressed(uint8_t button_pin)`: 특정한 버튼이 눌릴 때까지 작동을 대기
 
-### Class: `Position`
-웨이퍼와 광원의 상대적인 위치를 좌표 형태로 처리하는 클래스입니다.
-
-- **Members:**
-  - `uint16_t x`: 위치의 x 좌표
-  - `uint16_t y`: 위치의 y 좌표
-
-- **Methods:**
-  - `uint16_t GetX() const`: x 좌표를 리턴
-  - `uint16_t GetY() const`: y 좌표를 리턴
-  - `void SetX(uint16_t x_value)`: x 좌표를 설정
-  - `void SetY(uint16_t y_value)`: y 좌표를 설정
-  - `void IncreaseX()`: x 좌표를 1 증가
-  - `void IncreaseY()`: y 좌표를 1 증가
-
 #### Class: `State`
 현재 웨이퍼의 위치, UV LED 제어를 위한 정보 등을 포함하는 시스템의 현재 상태를 다루는 클래스입니다.
 
@@ -83,6 +68,8 @@ scanner
   - `void IncreaseNumExcuse()`: 실행 횟수를 1 증가
   - `void InitState()`: 시스템 상태를 초기화
   - `void UpdateExposureStartTime()`: Expose가 시작된 시각을 업데이트
+
+---
 
 ### Namespace: `ArduinoMega`
 시스템에 사용되는 아두이노 메가의 핀 할당 정보가 이 네임스페이스에 포함됩니다.
@@ -111,6 +98,23 @@ scanner
   - `constexpr uint8_t kMsX[]`: x축 모터 마이크로스테핑 설정 신호 (Digital 25, 26, 27)
   - `constexpr uint8_t kMsY[]`: y축 모터 마이크로스테핑 설정 신호 (Digital 28, 29, 30)
   - `constexpr uint8_t kMsM[]`: 마스크(레티클) 모터 마이크로스테핑 설정 신호 (Digital 31, 32, 33)
+
+---
+
+### Class: `Position`
+웨이퍼와 광원의 상대적인 위치를 좌표 형태로 처리하는 클래스입니다.
+
+- **Members:**
+  - `uint16_t x`: 위치의 x 좌표
+  - `uint16_t y`: 위치의 y 좌표
+
+- **Methods:**
+  - `uint16_t GetX() const`: x 좌표를 리턴
+  - `uint16_t GetY() const`: y 좌표를 리턴
+  - `void SetX(uint16_t x_value)`: x 좌표를 설정
+  - `void SetY(uint16_t y_value)`: y 좌표를 설정
+  - `void IncreaseX()`: x 좌표를 1 증가
+  - `void IncreaseY()`: y 좌표를 1 증가
 
 ## Getting Started
 
