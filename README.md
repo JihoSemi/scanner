@@ -86,18 +86,22 @@ scanner
 아두이노 메가의 핀 할당 정보 중 모터 제어를 위한 핀 정보는 이 네임스페이스(`ArduinoMega::MotorPin`)에 포함됩니다.
 
 - **Constants:**
-  - `constexpr uint8_t kEnable1FR`: x축 모터 활성화 신호 (Digital 22)
-  - `constexpr uint8_t kEnable1FL`: y축 모터 활성화 신호 (Digital 23)
-  - `constexpr uint8_t kEnable2FR`: 마스크(레티클) 모터 활성화 신호 (Digital 24)
-  - `constexpr uint8_t kStep1FR`: x축 모터 Step 제어 신호 (Digital 2)
-  - `constexpr uint8_t kStep1FL`: y축 모터 Step 제어 신호 (Digital 4)
-  - `constexpr uint8_t kStep2FR`: 마스크(레티클) 모터 Step 제어 신호 (Digital 6)
-  - `constexpr uint8_t kDir1FR`: x축 모터 방향 제어 신호 (Digital 3)
-  - `constexpr uint8_t kDir1FL`: y축 모터 방향 제어 신호 (Digital 5)
-  - `constexpr uint8_t kDir2FR`: 마스크(레티클) 모터 방향 제어 신호 (Digital 7)
-  - `constexpr uint8_t kMs1FR[]`: x축 모터 마이크로스테핑 설정 신호 (Digital 25, 26, 27)
-  - `constexpr uint8_t kMs1FL[]`: y축 모터 마이크로스테핑 설정 신호 (Digital 28, 29, 30)
-  - `constexpr uint8_t kMs2FR[]`: 마스크(레티클) 모터 마이크로스테핑 설정 신호 (Digital 31, 32, 33)
+  - `constexpr uint8_t kEnable1FR`: 1F 오른쪽 모터 활성화 신호 (Digital 22)
+  - `constexpr uint8_t kEnable1FL`: 1F 왼쪽 모터 활성화 신호 (Digital 23)
+  - `constexpr uint8_t kEnable2FR`: 2F 오른쪽 모터 활성화 신호 (Digital 24)
+  - `constexpr uint8_t kEnable2FL`: 2F 왼쪽 모터 활성화 신호 (Digital 25)
+  - `constexpr uint8_t kStep1FR`: 1F 오른쪽 모터 Step 제어 신호 (Digital 2)
+  - `constexpr uint8_t kStep1FL`: 1F 왼쪽 모터 Step 제어 신호 (Digital 4)
+  - `constexpr uint8_t kStep2FR`: 2F 오른쪽 모터 Step 제어 신호 (Digital 6)
+  - `constexpr uint8_t kStep2FL`: 2F 왼쪽 모터 Step 제어 신호 (Digital 8)
+  - `constexpr uint8_t kDir1FR`: 1F 오른쪽 모터 방향 제어 신호 (Digital 3)
+  - `constexpr uint8_t kDir1FL`: 1F 왼쪽 모터 방향 제어 신호 (Digital 5)
+  - `constexpr uint8_t kDir2FR`: 2F 오른쪽 모터 방향 제어 신호 (Digital 7)
+  - `constexpr uint8_t kDir2FL`: 2F 왼쪽 모터 방향 제어 신호 (Digital 9)
+  - `constexpr uint8_t kMs1FR[]`: 1F 오른쪽 모터 마이크로스테핑 설정 신호 (Digital 26, 27, 28)
+  - `constexpr uint8_t kMs1FL[]`: 1F 왼쪽 모터 마이크로스테핑 설정 신호 (Digital 29, 30, 31)
+  - `constexpr uint8_t kMs2FR[]`: 2F 오른쪽 모터 마이크로스테핑 설정 신호 (Digital 32, 33, 34)
+  - `constexpr uint8_t kMs2FR[]`: 2F 오른쪽 모터 마이크로스테핑 설정 신호 (Digital 35, 36, 37)
 
 ---
 

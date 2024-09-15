@@ -63,9 +63,9 @@ void Control::GeneralControl::SetPinMode() {
     
     for (size_t i = 0; i < 3; i++)
     {
-        pinMode(ArduinoMega::MotorPin::kMsX[i], OUTPUT);
-        pinMode(ArduinoMega::MotorPin::kMsY[i], OUTPUT);
-        pinMode(ArduinoMega::MotorPin::kMsM[i], OUTPUT);
+        pinMode(ArduinoMega::MotorPin::kMs1FR[i], OUTPUT);
+        pinMode(ArduinoMega::MotorPin::kMs1FL[i], OUTPUT);
+        pinMode(ArduinoMega::MotorPin::kMs2FR[i], OUTPUT);
     }
     
     pinMode(ArduinoMega::kIrX, INPUT);
@@ -83,9 +83,10 @@ void Control::GeneralControl::InitializeSystem() {
     // Serial.begin(115200);
     State::InitState();
     SetPinMode();
-    Control::MotorControl::SetMotor(motor_x, 60, 16); // Set the speed and Microstepping for the x-motor
-    Control::MotorControl::SetMotor(motor_y, 60, 16); // Set the speed and Microstepping for the y-motor
-    Control::MotorControl::SetMotor(motor_m, 60, 16); // Set the speed and Microstepping for the mask motor
+    Control::MotorControl::SetMotor(motor_1f_right, 60, 16); // Set the speed and Microstepping for the 1F right motor
+    Control::MotorControl::SetMotor(motor_1f_left, 60, 16);  // Set the speed and Microstepping for the 1F left motor
+    Control::MotorControl::SetMotor(motor_2f_right, 60, 16); // Set the speed and Microstepping for the 2F right motor
+    Control::MotorControl::SetMotor(motor_2f_left, 60, 16);  // Set the speed and Microstepping for the 2F left motor
     ControlLED(OFF);
     ControlFan(ON);
     InitializePosition();
@@ -124,10 +125,10 @@ void Control::GeneralControl::MoveToInitial(const char kAxis) {
     uint8_t ir_sensor;
 
     if (kAxis == 'x') {
-        motor = &motor_x;
+        motor = &motor_1f_right;
         ir_sensor = ArduinoMega::kIrX;
     } else {
-        motor = &motor_y;
+        motor = &motor_1f_left;
         ir_sensor = ArduinoMega::kIrY;
     }
 
@@ -202,20 +203,20 @@ void Control::GeneralControl::Scan() {
      * 위 또는 아래 방향으로 번갈아가며 웨이퍼를 이동시켜야 함
      * State::toggle_up_down은 웨이퍼의 이동 방향
      */
-    motor_m.enable();
-    motor_y.enable();
+    motor_2f_right.enable();
+    motor_1f_left.enable();
 
     StartExposure();
     
     int move_mask_direction = (State::GetDirection() == DOWN) ? 1 : -1;
     long move_mask_steps = move_mask_direction * (Parameter::MASK_Y / 2) * Parameter::SPD;
 
-    motor_y.startMove(
+    motor_1f_left.startMove(
         // non-blocking으로 wafer 이동 시작
         -1 * move_mask_steps / Parameter::LINEAR_SD_RATIO, // 축소 비율만큼 짧은 거리로 이동
         Parameter::EXPOSURE_TIME * 1E6
         );
-    motor_m.startMove(
+    motor_2f_right.startMove(
         // non-blocking으로 mask 이동 시작
         move_mask_steps,
         Parameter::EXPOSURE_TIME * 1E6
@@ -223,8 +224,8 @@ void Control::GeneralControl::Scan() {
 
     EndExposure();
 
-    motor_m.disable();
-    motor_y.disable();
+    motor_2f_right.disable();
+    motor_1f_left.disable();
 
     State::InvertDirection();
 }
