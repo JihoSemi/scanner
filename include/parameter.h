@@ -31,9 +31,12 @@ namespace ArduinoMega {
     constexpr uint8_t kStartButton      = 50; // Start button port: Digital 50
     constexpr uint8_t kExposureControl  = 48; // Exposure unit relay control signal port: Digital 48
     constexpr uint8_t kRestartButton    = 51; // Restart button port: Digital 51
-    constexpr uint8_t kIrX              = 15; // x-axis IR sensor
-    constexpr uint8_t kIrY              = 14; // y-axis IR sensor
+    // constexpr uint8_t kIrX              = 15; // x-axis IR sensor
+    // constexpr uint8_t kIrY              = 14; // y-axis IR sensor
     constexpr uint8_t kFanPwr           = 49; // Cooling fan power relay control signal port Digital 49
+    constexpr uint8_t kLimitX1F         = 14; // Position limiting switch for 1F x-axis
+    constexpr uint8_t kLimitY1F         = 15; // Position limiting switch for 1F y-axis
+    constexpr uint8_t kLimitY2F         = 16; // Position limiting switch for 2F y-axis
 
     namespace MotorPin {
         constexpr uint8_t kEnable1FR      = 22; // Enable signal for the 1F right motor

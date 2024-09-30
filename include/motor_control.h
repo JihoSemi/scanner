@@ -20,7 +20,6 @@ namespace Control {
     private:
     public:
         static void SetMotor(A4988 &motor, uint8_t rpm, uint8_t step=1);  
-        static void _SetMicroStep(const uint8_t* kMs, uint8_t step=1);  // !! NOT USED ANYMORE !!         
         static void Rotate(A4988 &motor, const double angle);
         static void Move(const char axis, const double distance);
     };

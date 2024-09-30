@@ -53,7 +53,7 @@ scanner
 
 - **Members:**
   - `Position current_pos`: 웨이퍼의 현재 위치
-  - `uint8_t num_excuse`: 실행한 횟수
+  - `uint8_t num_executions`: 실행한 횟수
   - `unsigned long exposure_start_time`: Expose가 시작된 시각
   - `bool exposing`: UV LED의 ON/OFF 상태
   - `bool toggle_up_down`: 다음 `scan()`의 이동 방향
@@ -65,7 +65,7 @@ scanner
   - `void IncreaseY()`: 현재 위치의 y 좌표를 1 증가
   - `void InvertDirection()`: 이동 방향을 반전
   - `void SetExposing(bool state)`: UV LED의 상태를 설정
-  - `void IncreaseNumExcuse()`: 실행 횟수를 1 증가
+  - `void IncreaseNumExecutions()`: 실행 횟수를 1 증가
   - `void InitState()`: 시스템 상태를 초기화
   - `void UpdateExposureStartTime()`: Expose가 시작된 시각을 업데이트
 
