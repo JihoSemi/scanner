@@ -4,7 +4,7 @@
  * 일반 설정, 제어에 관련된 클래스와 변수를 선언
  */
 #include "parameter.h"
-#include "A4988.h"
+#include <A4988.h>
 
 extern const bool kWaferArea[Control::Parameter::DIES][Control::Parameter::DIES];
 
@@ -29,13 +29,13 @@ namespace Control {
      * 각 층의 두 모터를 층별로 한 번에 제어하기 위한 클래스
      */
     private:
-        A4988 &left;
-        A4988 &right;
+        A4988* left;
+        A4988* right;
         int16_t limit_x;
         int16_t limit_y;
 
     public:
-        void SetFloor(A4988 &m_left, A4988 &m_right, const int16_t lim_y, int16_t lim_x=-1);
+        void SetFloor(A4988 m_left, A4988 m_right, const int16_t lim_y, int16_t lim_x=-1);
         void Enable();
         void Disable();
         void Move(const char axis, const double distance, const bool is_exposure=false);

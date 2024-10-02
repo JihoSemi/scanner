@@ -23,22 +23,22 @@ void Position::SetX(uint16_t x_value) { x = x_value; }
 void Position::SetY(uint16_t y_value) { y = y_value; }
 
 // Floor 클래스 메서드 정의
-void Control::Floor::SetFloor(A4988 &m_left, A4988 &m_right, const int16_t lim_y, const int16_t lim_x)
+void Control::Floor::SetFloor(A4988 m_left, A4988 m_right, const int16_t lim_y, const int16_t lim_x)
 {
-    left = m_left;
-    right = m_right;
+    left = &m_left;
+    right = &m_right;
     limit_x = lim_x;
     limit_y = lim_y;
 }
 void Control::Floor::Enable()
 {
-    left.enable();
-    right.enable();
+    left->enable();
+    right->enable();
 }
 void Control::Floor::Disable()
 {
-    left.disable();
-    right.disable();
+    left->disable();
+    right->disable();
 }
 void Control::Floor::Move(const char axis, const double distance, const bool is_exposure)
 {
@@ -47,20 +47,20 @@ void Control::Floor::Move(const char axis, const double distance, const bool is_
     switch (axis)
     {
     case 'x':
-        left.startMove(steps);
-        right.startMove(steps);
+        left->startMove(steps);
+        right->startMove(steps);
         break;
 
     case 'y':
         if (is_exposure)
         {
-            left.startMove(steps, Control::Parameter::EXPOSURE_TIME * 1E6);
-            right.startMove(-1 * steps, Control::Parameter::EXPOSURE_TIME * 1E6);
+            left->startMove(steps, Control::Parameter::EXPOSURE_TIME * 1E6);
+            right->startMove(-1 * steps, Control::Parameter::EXPOSURE_TIME * 1E6);
         }
         else
         {
-            left.startMove(steps);
-            right.startMove(-1 * steps);
+            left->startMove(steps);
+            right->startMove(-1 * steps);
         }
         break;
     default:
@@ -69,18 +69,18 @@ void Control::Floor::Move(const char axis, const double distance, const bool is_
 }
 void Control::Floor::MoveBlock(const char axis, const double distance) {
     int steps = Control::Parameter::SPD * distance;
-    long time = left.getTimeForMove(steps);
+    long time = left->getTimeForMove(steps);
 
     switch (axis)
     {
     case 'x':
-        left.startMove(steps);
-        right.startMove(steps);
+        left->startMove(steps);
+        right->startMove(steps);
         break;
 
     case 'y':
-        left.startMove(steps);
-        right.startMove(-1 * steps);
+        left->startMove(steps);
+        right->startMove(-1 * steps);
         break;
     default:
         break;
@@ -104,8 +104,8 @@ void Control::Floor::MoveToInitial(const char axis) {
         {
             if (digitalRead(limit) == HIGH)
             {
-                left.stop();
-                right.stop();
+                left->stop();
+                right->stop();
                 Disable();
                 break;
             }
