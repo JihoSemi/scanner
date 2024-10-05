@@ -2,7 +2,7 @@
 #include "../include/motor_control.h"
 
 // 유효한 Wafer 영역을 설정
-const bool kWaferArea[Control::Parameter::DIES][Control::Parameter::DIES] = {
+const bool WAFER_AREA[Control::Parameter::DIES][Control::Parameter::DIES] = {
     {0, 0, 0, 0, 1, 1, 0, 0, 0, 0},
     {0, 0, 1, 1, 1, 1, 1, 1, 0, 0},
     {0, 1, 1, 1, 1, 1, 1, 1, 1, 0},
@@ -12,108 +12,182 @@ const bool kWaferArea[Control::Parameter::DIES][Control::Parameter::DIES] = {
     {0, 1, 1, 1, 1, 1, 1, 1, 1, 0},
     {0, 1, 1, 1, 1, 1, 1, 1, 1, 0},
     {0, 0, 1, 1, 1, 1, 1, 1, 0, 0},
-    {0, 0, 0, 0, 1, 1, 0, 0, 0, 0}};
+    {0, 0, 0, 0, 1, 1, 0, 0, 0, 0}
+    };
 
 // Position 클래스의 기본 메서드 정의
-uint16_t Position::GetX() const { return x; }
-uint16_t Position::GetY() const { return y; }
-void Position::IncreaseX() { x++; }
-void Position::IncreaseY() { y++; }
-void Position::SetX(uint16_t x_value) { x = x_value; }
-void Position::SetY(uint16_t y_value) { y = y_value; }
+Position::Position() : x(0), y(0) {
+    Serial.println("Position initialized: x = 0, y = 0");
+}
+uint16_t Position::GetX() const {
+    Serial.print("GetX called, returning: ");
+    Serial.println(x);
+    return x;
+}
+uint16_t Position::GetY() const {
+    Serial.print("GetY called, returning: ");
+    Serial.println(y);
+    return y;
+}
+void Position::IncreaseX() {
+    x++;
+    Serial.print("IncreaseX called, new x: ");
+    Serial.println(x);
+}
+void Position::IncreaseY() {
+    y++;
+    Serial.print("IncreaseY called, new y: ");
+    Serial.println(y);
+}
+void Position::SetX(uint16_t x_value) {
+    x = x_value;
+    Serial.print("SetX called, new x: ");
+    Serial.println(x);
+}
+void Position::SetY(uint16_t y_value) {
+    y = y_value;
+    Serial.print("SetY called, new y: ");
+    Serial.println(y);
+}
 
 // Floor 클래스 메서드 정의
-void Control::Floor::SetFloor(A4988 m_left, A4988 m_right, const int16_t lim_y, const int16_t lim_x)
+void Control::Floor::SetFloor(AccelStepper& m_left, AccelStepper& m_right, const uint8_t en_left, const uint8_t en_right, const int16_t lim_y, const int16_t lim_x)
 {
-    left = &m_left;
-    right = &m_right;
-    limit_x = lim_x;
-    limit_y = lim_y;
+    motor[LEFT] = &m_left;
+    motor[RIGHT] = &m_right;
+    enable[LEFT] = en_left;
+    enable[RIGHT] = en_right;
+    limit[X] = lim_x;
+    limit[Y] = lim_y;
+
+    Disable();
+    Serial.println("SetFloor called, motors and limits set.");
 }
 void Control::Floor::Enable()
 {
-    left->enable();
-    right->enable();
+    // Active Low
+    digitalWrite(enable[LEFT], LOW);
+    digitalWrite(enable[RIGHT], LOW);
+    Serial.println("Motors enabled.");
 }
 void Control::Floor::Disable()
 {
-    left->disable();
-    right->disable();
+    digitalWrite(enable[LEFT], HIGH);
+    digitalWrite(enable[RIGHT], HIGH);
+    Serial.println("Motors disabled.");
 }
-void Control::Floor::Move(const char axis, const double distance, const bool is_exposure)
+void Control::Floor::Move(const AxisIndex axis, const double distance)
 {
-    int steps = Control::Parameter::SPD * distance;
+    Serial.print("Move called, axis: ");
+    Serial.print(axis == X ? "X" : "Y");
+    Serial.print(", distance: ");
+    Serial.println(distance);
 
-    switch (axis)
+    int16_t steps = Parameter::SPD * distance * Parameter::MICROSTEP;
+    uint16_t speed = Parameter::MOTOR_SPEED;
+    int32_t left_destination;
+    int32_t right_destination;
+
+    if (axis == X)
     {
-    case 'x':
-        left->startMove(steps);
-        right->startMove(steps);
-        break;
+        left_destination = motor[LEFT]->currentPosition() + steps;
+        right_destination = motor[RIGHT]->currentPosition() + steps;
+    }
+    else if (axis == Y)
+    {
+        left_destination = motor[LEFT]->currentPosition() + steps;
+        right_destination = motor[RIGHT]->currentPosition() - steps;
+    }
+    motor[LEFT]->setSpeed(speed);
+    motor[RIGHT]->setSpeed(speed);
+    motor[LEFT]->moveTo(left_destination);
+    motor[RIGHT]->moveTo(right_destination);
 
-    case 'y':
-        if (is_exposure)
+    Serial.print("Motors moving to positions: left = ");
+    Serial.print(left_destination);
+    Serial.print(", right = ");
+    Serial.println(right_destination);
+
+    Enable();
+    while (motor[LEFT]->distanceToGo() != 0 || motor[RIGHT]->distanceToGo() != 0)
+    {
+        motor[LEFT]->runSpeedToPosition();
+        motor[RIGHT]->runSpeedToPosition();
+
+        // Emergency stop mechanism
+        if (digitalRead(ArduinoMega::START)) // START button can be used as an emergency stop button
         {
-            left->startMove(steps, Control::Parameter::EXPOSURE_TIME * 1E6);
-            right->startMove(-1 * steps, Control::Parameter::EXPOSURE_TIME * 1E6);
+            motor[LEFT]->stop();
+            motor[RIGHT]->stop();
+            Disable();
+            Serial.println("Emergency stop triggered during movement.");
+            return;
+        }
+    }
+    Disable();
+    Serial.println("Move completed.");
+}
+void Control::Floor::MoveToInitial(const AxisIndex axis) {
+    Serial.print("MoveToInitial called, axis: ");
+    Serial.println(axis == X ? "X" : "Y");
+
+    int16_t lim;
+
+    if (axis == X)
+        lim = limit[X];
+    else if (axis == Y)
+        lim = limit[Y];
+    
+    if (lim != -1 && digitalRead(lim) != HIGH)
+    {   
+        motor[LEFT]->setSpeed(Parameter::MOTOR_SPEED);
+        motor[RIGHT]->setSpeed(Parameter::MOTOR_SPEED);
+
+        // 충분히 큰 거리 설정
+        if (axis == X)
+        {
+            motor[LEFT]->moveTo(motor[LEFT]->currentPosition() + Parameter::INITIAL_MOVE_DISTANCE);
+            motor[RIGHT]->moveTo(motor[RIGHT]->currentPosition() + Parameter::INITIAL_MOVE_DISTANCE);
+        }
+        else if (axis == Y)
+        {
+            motor[LEFT]->moveTo(motor[LEFT]->currentPosition() + Parameter::INITIAL_MOVE_DISTANCE);
+            motor[RIGHT]->moveTo(motor[RIGHT]->currentPosition() - Parameter::INITIAL_MOVE_DISTANCE);
         }
         else
         {
-            left->startMove(steps);
-            right->startMove(-1 * steps);
+            Serial.println("Invalid axis");
+            return;
         }
-        break;
-    default:
-        break;
-    }
-}
-void Control::Floor::MoveBlock(const char axis, const double distance) {
-    int steps = Control::Parameter::SPD * distance;
-    long time = left->getTimeForMove(steps);
-
-    switch (axis)
-    {
-    case 'x':
-        left->startMove(steps);
-        right->startMove(steps);
-        break;
-
-    case 'y':
-        left->startMove(steps);
-        right->startMove(-1 * steps);
-        break;
-    default:
-        break;
-    }
-    delayMicroseconds(time);
-}
-void Control::Floor::MoveToInitial(const char axis) {
-    // Micro Switch가 눌리지 않을 때 0을 출력한다고 가정
-    int16_t limit;
-
-    if (axis == 'x')
-        limit = limit_x;
-    else if (axis == 'y')
-        limit = limit_y;
-    
-    if (limit != -1 && digitalRead(limit) != HIGH) 
-    {
         Enable();
-        Move(axis, -1000);  // 충분히 큰 거리 이동
-        while (true) 
+
+        while (true)
         {
-            if (digitalRead(limit) == HIGH)
+            motor[LEFT]->runSpeedToPosition();
+            motor[RIGHT]->runSpeedToPosition();
+            
+            if (digitalRead(lim) == HIGH)
             {
-                left->stop();
-                right->stop();
+                motor[LEFT]->stop();
+                motor[RIGHT]->stop();
                 Disable();
+                Serial.println("Reached initial position.");
                 break;
+            }
+
+            if (digitalRead(ArduinoMega::START)) // START button can be used as an emergency stop button
+            {
+                motor[LEFT]->stop();
+                motor[RIGHT]->stop();
+                Disable();
+                Serial.println("Emergency stop triggered.");
+                return;
             }
         }
     }
-    if (axis == 'x')
+    if (axis == X)
         State::SetX(Parameter::INIT_X);
-    else if (axis == 'y')
+    else if (axis == Y)
         State::SetY(Parameter::INIT_Y);
 }
 
@@ -132,14 +206,27 @@ void Control::State::SetX(uint16_t x_value) { current_pos.SetX(x_value); }
 void Control::State::SetY(uint16_t y_value) { current_pos.SetY(y_value); }
 void Control::State::IncreaseX() { current_pos.IncreaseX(); }
 void Control::State::IncreaseY() { current_pos.IncreaseY(); }
-void Control::State::SetExposing(bool state) { exposing = state; }
-void Control::State::IncreaseNumExecutions() { num_executions++; }
+void Control::State::SetExposing(bool state) {
+    exposing = state;
+    Serial.print("SetExposing called, exposing set to: ");
+    Serial.println(exposing ? "true" : "false");
+}
+void Control::State::IncreaseNumExecutions() {
+    num_executions++;
+    Serial.print("IncreaseNumExecutions called, new num_executions: ");
+    Serial.println(num_executions);
+}
 void Control::State::InitState()
 {
     num_executions = 0;
     exposing = false;
+    Serial.println("InitState called, num_executions set to 0, exposing set to false");
 }
-void Control::State::UpdateExposureStartTime() { exposure_start_time = millis(); }
+void Control::State::UpdateExposureStartTime() {
+    exposure_start_time = millis();
+    Serial.print("UpdateExposureStartTime called, exposure_start_time set to: ");
+    Serial.println(exposure_start_time);
+}
 uint16_t Control::State::GetX() { return current_pos.GetX(); }
 uint16_t Control::State::GetY() { return current_pos.GetY(); }
 uint8_t Control::State::GetNumExecutions() { return num_executions; }
@@ -147,34 +234,71 @@ bool Control::State::GetExposing() { return exposing; }
 unsigned long Control::State::GetExposureStartTime() { return exposure_start_time; }
 
 // GeneralControl 클래스의 메서드 정의
+void Control::GeneralControl::ConfigSystem(
+            Floor& first, Floor& second,
+            AccelStepper& m_1f_l, AccelStepper& m_1f_r, AccelStepper& m_2f_l, AccelStepper& m_2f_r,
+            uint8_t en_1f_l, uint8_t en_1f_r, uint8_t en_2f_l, uint8_t en_2f_r,
+            int16_t lim_x_1f, int16_t lim_y_1f, int16_t lim_y_2f
+        )
+{   
+    /*
+     * 시스템 구성 설정
+     */
+    floor[FIRST] = &first;
+    floor[SECOND] = &second;
+    motor[LEFT_1F] = &m_1f_l;
+    motor[RIGHT_1F] = &m_1f_r;
+    motor[LEFT_2F] = &m_2f_l;
+    motor[RIGHT_2F] = &m_2f_r;
+    enable[LEFT_1F] = en_1f_l;
+    enable[RIGHT_1F] = en_1f_r;
+    enable[LEFT_2F] = en_2f_l;
+    enable[RIGHT_2F] = en_2f_r;
+    limit[X_1F] = lim_x_1f;
+    limit[Y_1F] = lim_y_1f;
+    limit[Y_2F] = lim_y_2f;
+
+    Serial.println("System configuration complete.");
+}
+        
 void Control::GeneralControl::SetPinMode()
 {
+    Serial.println("SetPinMode called.");
     /*
      * Arduino의 각종 제어 Pin mode 설정
      */
-    pinMode(ArduinoMega::kStartButton, INPUT);
-    pinMode(ArduinoMega::kRestartButton, INPUT);
-    pinMode(ArduinoMega::kExposureControl, OUTPUT);
-    pinMode(ArduinoMega::kFanPwr, OUTPUT);
+    pinMode(ArduinoMega::START, INPUT);
+    pinMode(ArduinoMega::RESTART, INPUT);
+    pinMode(ArduinoMega::EXPOSURE_CTRL, OUTPUT);
+    pinMode(ArduinoMega::FAN_CTRL, OUTPUT);
 
     for (size_t i = 0; i < 3; i++)
     {
-        pinMode(ArduinoMega::MotorPin::kMs1FR[i], OUTPUT);
-        pinMode(ArduinoMega::MotorPin::kMs1FL[i], OUTPUT);
-        pinMode(ArduinoMega::MotorPin::kMs2FR[i], OUTPUT);
-        pinMode(ArduinoMega::MotorPin::kMs2FL[i], OUTPUT);
+        // MicroStepping Pin
+        pinMode(ArduinoMega::MotorPin::MICROSTEP_1F_R[i], OUTPUT);
+        pinMode(ArduinoMega::MotorPin::MICROSTEP_1F_L[i], OUTPUT);
+        pinMode(ArduinoMega::MotorPin::MICROSTEP_2F_R[i], OUTPUT);
+        pinMode(ArduinoMega::MotorPin::MICROSTEP_2F_L[i], OUTPUT);
     }
 
-    pinMode(ArduinoMega::kLimitX1F, INPUT);
-    pinMode(ArduinoMega::kLimitY1F, INPUT);
-    pinMode(ArduinoMega::kLimitY2F, INPUT);
+    // Limit Switch Pin
+    pinMode(ArduinoMega::LIMIT_1F_X, INPUT);
+    pinMode(ArduinoMega::LIMIT_1F_Y, INPUT);
+    pinMode(ArduinoMega::LIMIT_2F_Y, INPUT);
+
+    // Motor Enable Pin
+    pinMode(ArduinoMega::MotorPin::ENABLE_1F_L, OUTPUT);
+    pinMode(ArduinoMega::MotorPin::ENABLE_1F_R, OUTPUT);
+    pinMode(ArduinoMega::MotorPin::ENABLE_2F_L, OUTPUT);
+    pinMode(ArduinoMega::MotorPin::ENABLE_2F_R, OUTPUT);
 }
 
 void Control::GeneralControl::InitializeSystem()
 {
+    Serial.println("InitializeSystem called.");
     /*
      * 시스템 초기화
-     * 모터 설정, PinMode 설정
+     * Motor 설정, PinMode 설정
      * Floor 설정
      * 제어 기본값 적용
      * 초기 위치 이동
@@ -183,29 +307,43 @@ void Control::GeneralControl::InitializeSystem()
     // Serial.begin(115200);
     State::InitState();
     SetPinMode();
-    Control::MotorControl::SetMotor(motor_1f_right, 60, 16); // Set the speed and Microstepping for the 1F right motor
-    Control::MotorControl::SetMotor(motor_1f_left, 60, 16);  // Set the speed and Microstepping for the 1F left motor
-    Control::MotorControl::SetMotor(motor_2f_right, 60, 16); // Set the speed and Microstepping for the 2F right motor
-    Control::MotorControl::SetMotor(motor_2f_left, 60, 16);  // Set the speed and Microstepping for the 2F left motor
-    
+
+    // Set the speed and Microstepping
+    Control::MotorControl::SetMotor(motor_1f_right, Parameter::MOTOR_MAX_SPEED);
+    Control::MotorControl::SetMotor(motor_1f_left, Parameter::MOTOR_MAX_SPEED);  
+    Control::MotorControl::SetMotor(motor_2f_right, Parameter::MOTOR_MAX_SPEED);
+    Control::MotorControl::SetMotor(motor_2f_left, Parameter::MOTOR_MAX_SPEED);  
+
     first_floor.SetFloor(
         // Set the first floor with two motors and two position limiting switches
         motor_1f_left, motor_1f_right,
-        ArduinoMega::kLimitY1F, ArduinoMega::kLimitX1F
-        ); 
+        ArduinoMega::MotorPin::ENABLE_1F_L, ArduinoMega::MotorPin::ENABLE_1F_R,
+        ArduinoMega::LIMIT_1F_Y, ArduinoMega::LIMIT_1F_X
+        );
+
     second_floor.SetFloor(
         // Set the second floor with two motors and one position limiting switches
         motor_2f_left, motor_2f_right,
-        ArduinoMega::kLimitY2F
-        ); 
+        ArduinoMega::MotorPin::ENABLE_2F_L, ArduinoMega::MotorPin::ENABLE_2F_R,
+        ArduinoMega::LIMIT_2F_Y
+        );
 
     ControlLED(OFF);
     ControlFan(ON);
-    InitializePosition();
-};
+
+    ConfigSystem(
+        first_floor, second_floor, 
+        motor_1f_left, motor_1f_right, motor_2f_left, motor_2f_right, 
+        ArduinoMega::MotorPin::ENABLE_1F_L, ArduinoMega::MotorPin::ENABLE_1F_R,
+        ArduinoMega::MotorPin::ENABLE_2F_L, ArduinoMega::MotorPin::ENABLE_2F_R,
+        ArduinoMega::LIMIT_1F_X, ArduinoMega::LIMIT_1F_Y, ArduinoMega::LIMIT_2F_Y
+    );
+}
 
 void Control::GeneralControl::WaitTillPressed(const uint8_t pin)
 {
+    Serial.print("WaitTillPressed called, waiting for pin: ");
+    Serial.println(pin);
     /*
      * Waiting for pressing Pull-Up switch
      */
@@ -218,6 +356,8 @@ void Control::GeneralControl::WaitTillPressed(const uint8_t pin)
             if (digitalRead(pin) == HIGH)
             { // Button Released
                 is_pressed = true;
+                Serial.print("Button pressed and released, pin: ");
+                Serial.println(pin);
             }
         }
     }
@@ -225,41 +365,48 @@ void Control::GeneralControl::WaitTillPressed(const uint8_t pin)
 
 void Control::GeneralControl::WaitForStart()
 {
+    Serial.println("WaitForStart called.");
     /*
      * Wating until the start button is pressed if an initial excution
      */
     if (!State::GetNumExecutions())
     {
-        WaitTillPressed(ArduinoMega::kStartButton);
+        WaitTillPressed(ArduinoMega::START);
         State::IncreaseNumExecutions();
     }
 }
 
 void Control::GeneralControl::InitializePosition()
 {
-    first_floor.MoveToInitial('x');
-    first_floor.MoveToInitial('y');
-    second_floor.MoveToInitial('y');
+    Serial.println("InitializePosition called.");
+    first_floor.MoveToInitial(Floor::X);
+    first_floor.MoveToInitial(Floor::Y);
+    second_floor.MoveToInitial(Floor::Y);
 }
 
 void Control::GeneralControl::ControlLED(uint8_t op)
 {
+    Serial.print("ControlLED called, operation: ");
+    Serial.println(op == OFF ? "OFF" : "ON");
     /*
      * LED is ON during LOW CTRL
      */
-    digitalWrite(ArduinoMega::kExposureControl, op);
+    digitalWrite(ArduinoMega::EXPOSURE_CTRL, op);
 }
 
 void Control::GeneralControl::ControlFan(uint8_t op)
 {
+    Serial.print("ControlFan called, operation: ");
+    Serial.println(op == OFF ? "OFF" : "ON");
     /*
      * Fan is ON during LOW CTRL
      */
-    digitalWrite(ArduinoMega::kFanPwr, op);
+    digitalWrite(ArduinoMega::FAN_CTRL, op);
 }
 
 void Control::GeneralControl::StartExposure()
 {
+    Serial.println("StartExposure called.");
     /*
      * Start LED exposure by non-blocking method
      */
@@ -271,11 +418,13 @@ void Control::GeneralControl::StartExposure()
 
 void Control::GeneralControl::EndExposure()
 {
+    Serial.println("EndExposure called.");
     while (State::GetExposing())
     {
         CheckExposure();
     }
     ControlFan(ON); // Turn on the fan again
+    Serial.println("Exposure ended.");
 }
 
 void Control::GeneralControl::CheckExposure()
@@ -289,79 +438,144 @@ void Control::GeneralControl::CheckExposure()
     {
         ControlLED(OFF);
         State::SetExposing(false);
+        Serial.println("Exposure completed, LED turned off.");
     }
+}
+
+void Control::GeneralControl::ScanMove(bool reverse)
+{
+    Serial.print("ScanMove called, reverse: ");
+    Serial.println(reverse ? "true" : "false");
+
+    int16_t steps[2];
+    steps[SECOND] = Parameter::MASK_Y * Parameter::SPD * Parameter::MICROSTEP;  // steps for mask motor
+    steps[FIRST] = -1 * (steps[SECOND] / Parameter::LINEAR_SD_RATIO);           // steps for wafer motor
+
+    uint16_t speed[2];
+    // 단위 검토 필요
+    speed[FIRST] = static_cast<uint16_t>(round(static_cast<double>(abs(steps[FIRST])) / Parameter::EXPOSURE_TIME));   // 단위 확인하여 수정 필요
+    speed[SECOND] = static_cast<uint16_t>(round(static_cast<double>(abs(steps[SECOND])) / Parameter::EXPOSURE_TIME));
+
+    if (reverse)
+    {
+        // reverse==true인 경우 반대 Direction으로 이동할 수 있도록 step 수를 반전 및 속도 재설정
+        steps[FIRST] *= -1;
+        steps[SECOND] *= -1;
+        speed[FIRST] = Parameter::MOTOR_SPEED;
+        speed[SECOND] = Parameter::MOTOR_SPEED;
+    }
+
+    int32_t destinations[4];
+    destinations[LEFT_1F] = motor[LEFT_1F]->currentPosition() + steps[FIRST];       // destination of 1F LEFT motor to go
+    destinations[RIGHT_1F] = motor[RIGHT_1F]->currentPosition() - steps[FIRST];     // destination of 1F RIGHT motor to go
+    destinations[LEFT_2F] = motor[LEFT_2F]->currentPosition() + steps[SECOND];      // destination of 2F LEFT motor to go
+    destinations[RIGHT_2F] = motor[RIGHT_2F]->currentPosition() - steps[SECOND];    // destination of 2F RIGHT motor to go
+
+    motor[LEFT_1F]->setSpeed(speed[FIRST]);
+    motor[RIGHT_1F]->setSpeed(speed[FIRST]);
+    motor[LEFT_2F]->setSpeed(speed[SECOND]);
+    motor[RIGHT_2F]->setSpeed(speed[SECOND]);
+
+    motor[LEFT_1F]->moveTo(destinations[LEFT_1F]);
+    motor[RIGHT_1F]->moveTo(destinations[RIGHT_1F]);
+    motor[LEFT_2F]->moveTo(destinations[LEFT_2F]);
+    motor[RIGHT_2F]->moveTo(destinations[RIGHT_2F]);
+
+    Serial.println("Motors moving to destinations.");
+
+    first_floor.Enable();
+    second_floor.Enable();
+    while (
+        motor[LEFT_1F]->distanceToGo() != 0 ||
+        motor[RIGHT_1F]->distanceToGo() != 0 ||
+        motor[LEFT_2F]->distanceToGo() != 0 ||
+        motor[RIGHT_2F]->distanceToGo() != 0
+    )
+    {
+        motor[LEFT_1F]->runSpeedToPosition();
+        motor[RIGHT_1F]->runSpeedToPosition();
+        motor[LEFT_2F]->runSpeedToPosition();
+        motor[RIGHT_2F]->runSpeedToPosition();
+
+        // Emergency stop condition
+        if (digitalRead(ArduinoMega::START) == LOW) // START button can be used as an emergency stop button
+        {
+            motor[LEFT_1F]->stop();
+            motor[RIGHT_1F]->stop();
+            motor[LEFT_2F]->stop();
+            motor[RIGHT_2F]->stop();
+            first_floor.Disable();
+            second_floor.Disable();
+            Serial.println("Emergency stop triggered.");
+            return;
+        }
+    }
+    first_floor.Disable();
+    second_floor.Disable();
+    Serial.println("ScanMove completed.");
 }
 
 void Control::GeneralControl::Scan()
 {
+    Serial.println("Scan called.");
     /*
-     * 스캔 동작 동안 mask는 웨이퍼와 y축 상에서 반대 방향으로 이동해야 함
+     * 스캔 동작 동안 mask는 웨이퍼와 y축 상에서 반대 Direction으로 이동해야 함
      * 웨이퍼 이동 거리는 축소 linear ratio에 따라 달라짐
      * 스캔을 1회 완료하면 스캔하는 동안 달라진 위치를 다시 원상복귀 시켜야 함
      * ㄹ 자로 이동하면 인접한 die의 pattern이 상하 반전된 상태로 있으므로 후속 공정이 어려움
      */
 
     StartExposure();
-
-    first_floor.Enable();
-    second_floor.Enable();
-
-    first_floor.Move(
-        'y',                                                    // non-blocking으로 wafer 이동 시작
-        -1 * (Parameter::MASK_Y / Parameter::LINEAR_SD_RATIO),  // 축소 비율만큼 짧은 거리, mask와 반대로 이동
-        true                                                    // Exposure time동안 이동하도록 설정
-        ); 
-    second_floor.Move(
-        'y',                                                    // non-blocking으로 mask 이동 시작
-        Parameter::MASK_Y,               
-        true
-        );
-
+    ScanMove(FORWARD);
     EndExposure();
-
-    first_floor.Move('y', Parameter::MASK_Y / Parameter::LINEAR_SD_RATIO);  // Scan 동안 움직인 위치를 초기화
-    second_floor.MoveBlock('y', -1 * Parameter::MASK_Y);                    // Blocking method로 움직여 이동이 끝나기 전에 Disable하는 것을 방지
-
-    first_floor.Disable();
-    second_floor.Disable();
+    ScanMove(REVERSE); // Scan 동안 움직인 위치를 초기화
+    Serial.println("Scan completed.");
 }
 
 void Control::GeneralControl::Operate()
 {
+    Serial.println("Operate called.");
     /*
      * 전체 Wafer에 대한 동작을 수행하는 High level method
      */
     while (
         State::GetX() < Parameter::DIES &&
-        State::GetY() < Parameter::DIES)
+        State::GetY() < Parameter::DIES
+        )
     {
         // 현재 광원의 위치가 wafer를 벗어나지 않을 때까지
-
-        if (kWaferArea[State::GetX()][State::GetY()])
+        if (WAFER_AREA[State::GetX()][State::GetY()])
         {
             // 유효한 wafer 영역 위에 광원이 위치하는 경우 Scan 수행
+            Serial.print("Valid wafer area detected at X: ");
+            Serial.print(State::GetX());
+            Serial.print(", Y: ");
+            Serial.println(State::GetY());
             Scan();
         }
 
         if (State::GetX() < Parameter::DIES - 1)
         {
-            // x 방향 끝까지 가지 않은 경우
-            first_floor.MoveBlock('x', -1 * Parameter::MASK_X);
+            // x Direction 끝까지 가지 않은 경우
+            Serial.println("Moving to next position in X direction.");
+            first_floor.Move(Floor::X, -1 * Parameter::MASK_X);
             State::IncreaseX();
         }
         else
         {
-            // x 방향 끝까지 간 경우
+            // x Direction 끝까지 간 경우
             if (State::GetY() < Parameter::DIES - 1)
             {
-                // y 방향 끝까지 가지 않은 경우
-                first_floor.MoveBlock('y', Parameter::MASK_Y);
+                // y Direction 끝까지 가지 않은 경우
+                Serial.println("Reached end of X direction, moving in Y direction.");
+                first_floor.Move(Floor::Y, Parameter::MASK_Y);
                 State::IncreaseY();
-                first_floor.MoveToInitial('x');
+                first_floor.MoveToInitial(Floor::X);
             }
             else
             {
-                // x 방향과 y 방향 모두 끝까지 간 경우, 즉 모든 Die가 완료된 경우
+                // x, y Direction 모두 끝까지 간 경우, 즉 모든 Die가 완료된 경우
+                Serial.println("All dies completed.");
                 break;
             }
         }

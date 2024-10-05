@@ -1,60 +1,63 @@
 #include "../include/motor_control.h"
 #include "../include/general_control.h"
 
-A4988 motor_1f_right(
-    // 1F right, wafer motor
-    Control::Parameter::MOTOR_STEPS, 
-    ArduinoMega::MotorPin::kDir1FR, ArduinoMega::MotorPin::kStep1FR, 
-    ArduinoMega::MotorPin::kEnable1FR, 
-    ArduinoMega::MotorPin::kMs1FR[0], ArduinoMega::MotorPin::kMs1FR[1], ArduinoMega::MotorPin::kMs1FR[2]
-    ); 
+// 1F 및 2F의 왼쪽 및 오른쪽 Motor 객체를 Step 및 Direction Pin과 함께 정의
+AccelStepper motor_1f_left(
+    AccelStepper::MotorInterfaceType::DRIVER, // Motor Interface 타입을 DRIVER로 설정 (Step 및 Direction 제어)
+    ArduinoMega::MotorPin::STEP_1F_L,         // 1F 왼쪽 Motor의 Step Pin
+    ArduinoMega::MotorPin::DIR_1F_L           // 1F 왼쪽 Motor의 Direction Pin
+);
 
-A4988 motor_1f_left(
-    // 1F left, wafer motor
-    Control::Parameter::MOTOR_STEPS, 
-    ArduinoMega::MotorPin::kDir1FL, ArduinoMega::MotorPin::kStep1FL, 
-    ArduinoMega::MotorPin::kEnable1FL, 
-    ArduinoMega::MotorPin::kMs1FL[0], ArduinoMega::MotorPin::kMs1FL[1], ArduinoMega::MotorPin::kMs1FL[2]
-    ); 
+AccelStepper motor_1f_right(
+    AccelStepper::MotorInterfaceType::DRIVER, // Motor Interface 타입을 DRIVER로 설정 (Step 및 Direction 제어)
+    ArduinoMega::MotorPin::STEP_1F_R,         // 1F 오른쪽 Motor의 Step Pin
+    ArduinoMega::MotorPin::DIR_1F_R           // 1F 오른쪽 Motor의 Direction Pin
+);
 
-A4988 motor_2f_right(
-    // 2F right, mask motor
-    Control::Parameter::MOTOR_STEPS, 
-    ArduinoMega::MotorPin::kDir2FR, ArduinoMega::MotorPin::kStep2FR, 
-    ArduinoMega::MotorPin::kEnable2FR, 
-    ArduinoMega::MotorPin::kMs2FR[0], ArduinoMega::MotorPin::kMs2FR[1], ArduinoMega::MotorPin::kMs2FR[2]
-    ); 
+AccelStepper motor_2f_left(
+    AccelStepper::MotorInterfaceType::DRIVER, // Motor Interface 타입을 DRIVER로 설정 (Step 및 Direction 제어)
+    ArduinoMega::MotorPin::STEP_2F_L,         // 2F 왼쪽 Motor의 Step Pin
+    ArduinoMega::MotorPin::DIR_2F_L           // 2F 왼쪽 Motor의 Direction Pin
+);
 
-A4988 motor_2f_left(
-    // 2F left, mask motor
-    Control::Parameter::MOTOR_STEPS, 
-    ArduinoMega::MotorPin::kDir2FL, ArduinoMega::MotorPin::kStep2FL, 
-    ArduinoMega::MotorPin::kEnable2FL, 
-    ArduinoMega::MotorPin::kMs2FL[0], ArduinoMega::MotorPin::kMs2FL[1], ArduinoMega::MotorPin::kMs2FL[2]
-    ); 
+AccelStepper motor_2f_right(
+    AccelStepper::MotorInterfaceType::DRIVER, // Motor Interface 타입을 DRIVER로 설정 (Step 및 Direction 제어)
+    ArduinoMega::MotorPin::STEP_2F_R,         // 2F 오른쪽 Motor의 Step Pin
+    ArduinoMega::MotorPin::DIR_2F_R           // 2F 오른쪽 Motor의 Direction Pin
+);
 
-void Control::MotorControl::SetMotor(A4988 &motor, uint8_t rpm, uint8_t step) {
-    motor.begin(rpm);
-    motor.setMicrostep(step);
-    motor.disable();
+// Motor의 최대 속도를 설정하는 함수
+void Control::MotorControl::SetMotor(AccelStepper &motor, uint16_t max_speed) {
+    Serial.print("Setting motor max speed to: ");
+    Serial.println(max_speed);
+    motor.setMaxSpeed(max_speed); // Motor의 최대 속도를 설정
+    Serial.println("Motor max speed set successfully.");
 }
 
-void Control::MotorControl::Rotate(A4988 &motor, const double angle) {
-    //Clock Wise rotate if angle >= 0 and Vice Verse
-    motor.rotate(angle);
-}
+// 주어진 MicroStep Pin을 사용하여 Motor의 MicroStep 모드를 설정하는 함수
+void Control::MotorControl::SetMicroStep(const uint8_t* microstep_pin_arr, uint8_t microstep) {
+    Serial.print("Setting microstep to: ");
+    Serial.println(microstep);
 
-void Control::MotorControl::Move(const char axis, const double distance) {
-    A4988* motor;
-
-    if (axis == 'x') {
-        motor = &motor_1f_right;
-    } else if (axis == 'y') {
-        motor = &motor_1f_left;
-    } else 
-        return;
+    // 다양한 MicroStep 설정에 대한 MicroStep 해상도 테이블
+    const uint8_t microstep_table[5][3] = {
+        {LOW,   LOW,    LOW},    // Full Step
+        {HIGH,  LOW,    LOW},    // Half Step
+        {LOW,   HIGH,   LOW},    // Quarter Step
+        {HIGH,  HIGH,   LOW},    // Eighth Step
+        {HIGH,  HIGH,   HIGH}    // Sixteenth Step
+    };
     
-    motor->enable();
-    motor->move(distance * Parameter::SPD);
-    motor->disable();
+    // 주어진 MicroStep 값에 따라 테이블의 적절한 Index를 결정
+    uint8_t index = (microstep == 1 || microstep == 2 || microstep == 4 || microstep == 8 || microstep == 16) ? __builtin_ctz(microstep) : 0;
+
+    // 선택된 MicroStep 모드에 따라 MicroStep Pin을 올바른 값으로 설정
+    for (uint8_t i = 0; i < 3; ++i) {
+        Serial.print("Setting microstep pin ");
+        Serial.print(microstep_pin_arr[i]);
+        Serial.print(" to: ");
+        Serial.println(microstep_table[index][i] == HIGH ? "HIGH" : "LOW");
+        digitalWrite(microstep_pin_arr[i], microstep_table[index][i]); // 테이블에 따라 Pin을 HIGH 또는 LOW로 설정
+    }
+    Serial.println("Microstep settings applied successfully.");
 }

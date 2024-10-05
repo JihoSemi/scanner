@@ -656,7 +656,7 @@
       <flipStanding>false</flipStanding>
     </org.diylc.components.connectivity.Jumper>
     <org.diylc.components.semiconductors.DIL__IC>
-      <name>A4988(X)</name>
+      <name>AccelStepper(X)</name>
       <alpha>127</alpha>
       <value></value>
       <orientation>_270</orientation>
@@ -704,7 +704,7 @@
       </indentColor>
     </org.diylc.components.semiconductors.DIL__IC>
     <org.diylc.components.semiconductors.DIL__IC>
-      <name>A4988(Mask)</name>
+      <name>AccelStepper(Mask)</name>
       <alpha>127</alpha>
       <value></value>
       <orientation>_270</orientation>
@@ -762,7 +762,7 @@
       </indentColor>
     </org.diylc.components.semiconductors.DIL__IC>
     <org.diylc.components.semiconductors.DIL__IC>
-      <name>A4988(Y)</name>
+      <name>AccelStepper(Y)</name>
       <alpha>127</alpha>
       <value></value>
       <orientation>_270</orientation>

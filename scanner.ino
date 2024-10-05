@@ -8,5 +8,5 @@ void loop() {
     Control::GeneralControl::WaitForStart();
     Control::GeneralControl::InitializePosition();
     Control::GeneralControl::Operate();
-    Control::GeneralControl::WaitTillPressed(ArduinoMega::kRestartButton);
+    Control::GeneralControl::WaitTillPressed(ArduinoMega::RESTART);
 }
