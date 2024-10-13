@@ -448,8 +448,8 @@ void Control::GeneralControl::ScanMove(bool reverse)
     Serial.println(reverse ? "true" : "false");
 
     int16_t steps[2];
-    steps[SECOND] = Parameter::MASK_Y * Parameter::SPD * Parameter::MICROSTEP;  // steps for mask motor
-    steps[FIRST] = -1 * (steps[SECOND] / Parameter::LINEAR_SD_RATIO);           // steps for wafer motor
+    steps[SECOND] = Parameter::MASK_Y * Parameter::SPD * Parameter::MICROSTEP;      // steps for mask motor
+    steps[FIRST] = -1 * Parameter::DIE_Y * Parameter::SPD * Parameter::MICROSTEP;   // steps for wafer motor
 
     uint16_t speed[2];
     // 단위 검토 필요
@@ -558,7 +558,7 @@ void Control::GeneralControl::Operate()
         {
             // x Direction 끝까지 가지 않은 경우
             Serial.println("Moving to next position in X direction.");
-            first_floor.Move(Floor::X, -1 * Parameter::MASK_X);
+            first_floor.Move(Floor::X, -1 * Parameter::DIE_X);
             State::IncreaseX();
         }
         else
@@ -568,7 +568,7 @@ void Control::GeneralControl::Operate()
             {
                 // y Direction 끝까지 가지 않은 경우
                 Serial.println("Reached end of X direction, moving in Y direction.");
-                first_floor.Move(Floor::Y, Parameter::MASK_Y);
+                first_floor.Move(Floor::Y, Parameter::DIE_Y);
                 State::IncreaseY();
                 first_floor.MoveToInitial(Floor::X);
             }

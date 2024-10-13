@@ -46,6 +46,8 @@ scanner
   - `uint16_t MOTOR_MAX_SPEED`: 모터의 최대 속도
   - `uint16_t MOTOR_SPEED`: 모터의 통상 속도
   - `int 16_t INITIAL_MOVE_DISTANCE`: 초기 위치로 이동하기 위해 필요한 "충분히 큰 스텝"
+  - `double DIE_X`: Die의 X 방향 길이
+  - `double DIE_Y`: Die의 Y 방향 길이
   - `double MASK_X`: 마스크(레티클)의 X 방향 길이
   - `double MASK_Y`: 마스크(레티클)의 Y 방향 길이
   - `double EXPOSURE_TIME`: 노광 시간

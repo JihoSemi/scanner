@@ -20,6 +20,8 @@ namespace Control {
         constexpr uint16_t MOTOR_MAX_SPEED = 1000;	        // Motor 최대 속도 설정
         constexpr uint16_t MOTOR_SPEED     = 300; 	        // 통상 Motor 속도
         constexpr int16_t INITIAL_MOVE_DISTANCE = -1000;    // 초기 위치 이동을 위한 충분히 큰 step 값
+        constexpr double DIE_X             = 10;            // die x dimension [mm]
+        constexpr double DIE_Y             = 10;            // die y dimension [mm]
         constexpr double MASK_X            = 30;  	        // mask x dimension [mm]
         constexpr double MASK_Y            = 30;  	        // mask y dimension [mm]
         constexpr double EXPOSURE_TIME     = 0.5; 	        // exposure time [sec]
