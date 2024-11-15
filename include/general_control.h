@@ -54,7 +54,7 @@ namespace Control {
         void Enable();                              // Motor Enable
         void Disable();                             // Motor Disable
         void Move(const AxisIndex axis, const double distance); // 특정 축으로 Motor 이동
-        void MoveToInitial(const AxisIndex axis);        // 초기 위치로 Motor 이동
+        void MoveToInitial(const AxisIndex axis, bool second);        // 초기 위치로 Motor 이동
     };
     
     class State {

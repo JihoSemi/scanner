@@ -40,7 +40,7 @@ scanner
   - `uint8_t INIT_X`: 초기 X 좌표
   - `uint8_t INIT_Y`: 초기 Y 좌표
   - `uint8_t MOTOR_STEPS`: 모터가 한 바퀴 회전하는 데 필요한 스텝 수
-  - `uint8_t SPD`: Step per Distance; 1 mm를 움직이는 데 필요한 스텝 수
+  - `uint8_t DPM`: Step per Distance; 1 mm를 움직이는 데 필요한 스텝 수
   - `uint8_t DIES`: 웨이퍼 지름에 들어갈 수 있는 Die의 수
   - `uint8_t MICROSTEP`: 모터의 마이크로테핑 설정
   - `uint16_t MOTOR_MAX_SPEED`: 모터의 최대 속도

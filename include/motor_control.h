@@ -6,10 +6,10 @@
 #include <AccelStepper.h>
 #include "parameter.h"
 
-extern AccelStepper motor_1f_right;
-extern AccelStepper motor_1f_left;
-extern AccelStepper motor_2f_right;
-extern AccelStepper motor_2f_left;
+// extern AccelStepper motor_1f_right;
+// extern AccelStepper motor_1f_left;
+// extern AccelStepper motor_2f_right;
+// extern AccelStepper motor_2f_left;
 
 namespace Control {
     class State; // MotorControl 클래스에서 State 클래스에 접근하기 위한 전방 선언

@@ -14,12 +14,12 @@ namespace Control {
         constexpr uint8_t INIT_X           = 0;   	        // 초기 x 좌표
         constexpr uint8_t INIT_Y           = 0;   	        // 초기 y 좌표
         constexpr uint8_t MOTOR_STEPS      = 200; 	        // 200/360 [Steps/Degree] <=> 1.8 [Degree/Step]
-        constexpr uint8_t SPD              = 50;  	        // 1mm 당 Step 수 [Steps/mm]
+        constexpr float DPM              = 0.3125;  	        // Step motor distance per millimeter
         constexpr uint8_t DIES             = 10;  	        // wafer의 지름에 들어갈 수 있는 최대 다이 개수
-        constexpr uint8_t MICROSTEP        = 1;   	        // MicroStepping 설정
-        constexpr uint16_t MOTOR_MAX_SPEED = 1000;	        // Motor 최대 속도 설정
-        constexpr uint16_t MOTOR_SPEED     = 300; 	        // 통상 Motor 속도
-        constexpr int16_t INITIAL_MOVE_DISTANCE = -1000;    // 초기 위치 이동을 위한 충분히 큰 step 값
+        constexpr uint8_t MICROSTEP        = 16;   	        // MicroStepping 설정
+        constexpr uint16_t MOTOR_MAX_SPEED = 500;	        // Motor 최대 속도 설정
+        constexpr uint16_t MOTOR_SPEED     = 30; 	        // 통상 Motor 속도
+        constexpr long INITIAL_MOVE_DISTANCE = 200;    // 초기 위치 이동을 위한 충분히 큰 step 값
         constexpr double DIE_X             = 10;            // die x dimension [mm]
         constexpr double DIE_Y             = 10;            // die y dimension [mm]
         constexpr double MASK_X            = 30;  	        // mask x dimension [mm]
@@ -31,32 +31,32 @@ namespace Control {
 
 namespace ArduinoMega {
     // Arduino I/O Pin
-    constexpr uint8_t START            = 50; 	// Start button port: Digital 50
-    constexpr uint8_t EXPOSURE_CTRL    = 48; 	// Exposure unit relay control signal port: Digital 48
-    constexpr uint8_t RESTART          = 51; 	// Restart button port: Digital 51
-    constexpr uint8_t FAN_CTRL         = 49; 	// Cooling fan power relay control signal port: Digital 49
-    constexpr uint8_t LIMIT_1F_X       = 14; 	// Position limiting switch for 1F x-axis
-    constexpr uint8_t LIMIT_1F_Y       = 15; 	// Position limiting switch for 1F y-axis
-    constexpr uint8_t LIMIT_2F_Y       = 16; 	// Position limiting switch for 2F y-axis
+    constexpr uint8_t START            = 48; 	// Start button port: Digital 50
+    constexpr uint8_t EXPOSURE_CTRL    = 50; 	// Exposure unit relay control signal port: Digital 48
+    constexpr uint8_t RESTART          = 46; 	// Restart button port: Digital 51
+    constexpr uint8_t FAN_CTRL         = 52; 	// Cooling fan power relay control signal port: Digital 49
+    constexpr uint8_t LIMIT_1F_X       = 47; 	// Position limiting switch for 1F x-axis
+    constexpr uint8_t LIMIT_1F_Y       = 49; 	// Position limiting switch for 1F y-axis
+    constexpr uint8_t LIMIT_2F_Y       = 51; 	// Position limiting switch for 2F y-axis
 
     namespace MotorPin {
         // Motor control pins
         constexpr uint8_t ENABLE_1F_R   = 22; 	// Enable signal for the 1F right motor
         constexpr uint8_t ENABLE_1F_L   = 23; 	// Enable signal for the 1F left motor
-        constexpr uint8_t ENABLE_2F_R   = 24; 	// Enable signal for the 2F right motor
-        constexpr uint8_t ENABLE_2F_L   = 25; 	// Enable signal for the 2F left motor
-        constexpr uint8_t STEP_1F_R     = 2;  	// Step signal for the 1F right motor
-        constexpr uint8_t STEP_1F_L     = 4;  	// Step signal for the 1F left motor
-        constexpr uint8_t STEP_2F_R     = 6;  	// Step signal for the 2F right motor
-        constexpr uint8_t STEP_2F_L     = 8;  	// Step signal for the 2F left motor
-        constexpr uint8_t DIR_1F_R      = 3;  	// Direction signal for the 1F right motor
-        constexpr uint8_t DIR_1F_L      = 5;  	// Direction signal for the 1F left motor
-        constexpr uint8_t DIR_2F_R      = 7;  	// Direction signal for the 2F right motor
-        constexpr uint8_t DIR_2F_L      = 9;  	// Direction signal for the 2F left motor
-        constexpr uint8_t MICROSTEP_1F_R[] = {26, 27, 28}; 	// Microstepping signal for the 1F right motor
-        constexpr uint8_t MICROSTEP_1F_L[] = {29, 30, 31}; 	// Microstepping signal for the 1F left motor
-        constexpr uint8_t MICROSTEP_2F_R[] = {32, 33, 34}; 	// Microstepping signal for the 2F right motor
-        constexpr uint8_t MICROSTEP_2F_L[] = {35, 36, 37}; 	// Microstepping signal for the 2F left motor
+        constexpr uint8_t ENABLE_2F_R   = 34; 	// Enable signal for the 2F right motor
+        constexpr uint8_t ENABLE_2F_L   = 45; 	// Enable signal for the 2F left motor
+        constexpr uint8_t STEP_1F_R     = 30;  	// Step signal for the 1F right motor
+        constexpr uint8_t STEP_1F_L     = 31;  	// Step signal for the 1F left motor
+        constexpr uint8_t STEP_2F_R     = 42;  	// Step signal for the 2F right motor
+        constexpr uint8_t STEP_2F_L     = 37;  	// Step signal for the 2F left motor
+        constexpr uint8_t DIR_1F_R      = 32;  	// Direction signal for the 1F right motor
+        constexpr uint8_t DIR_1F_L      = 33;  	// Direction signal for the 1F left motor
+        constexpr uint8_t DIR_2F_R      = 44;  	// Direction signal for the 2F right motor
+        constexpr uint8_t DIR_2F_L      = 35;  	// Direction signal for the 2F left motor
+        constexpr uint8_t MICROSTEP_1F_R[] = {24, 26, 28}; 	// Microstepping signal for the 1F right motor
+        constexpr uint8_t MICROSTEP_1F_L[] = {25, 27, 29}; 	// Microstepping signal for the 1F left motor
+        constexpr uint8_t MICROSTEP_2F_R[] = {36, 38, 40}; 	// Microstepping signal for the 2F right motor
+        constexpr uint8_t MICROSTEP_2F_L[] = {43, 41, 39}; 	// Microstepping signal for the 2F left motor
     };
 }
 
