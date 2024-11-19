@@ -6,11 +6,6 @@
 #include <AccelStepper.h>
 #include "parameter.h"
 
-// extern AccelStepper motor_1f_right;
-// extern AccelStepper motor_1f_left;
-// extern AccelStepper motor_2f_right;
-// extern AccelStepper motor_2f_left;
-
 namespace Control {
     class State; // MotorControl 클래스에서 State 클래스에 접근하기 위한 전방 선언
     class MotorControl {
@@ -19,7 +14,7 @@ namespace Control {
      */
     private:
     public:
-        static void SetMotor(AccelStepper& motor, uint16_t max_speed);          // Motor 설정
+        static void SetMotor(AccelStepper& motor);          // Motor 설정
         static void SetMicroStep(const uint8_t* micro_step, uint8_t step=1);    // MicroStep 설정
     };
 };

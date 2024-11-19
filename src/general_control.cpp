@@ -55,10 +55,27 @@ Control::Floor* Control::GeneralControl::floor[2] = {nullptr, nullptr};       //
 AccelStepper* Control::GeneralControl::motor[4] = {nullptr, nullptr, nullptr, nullptr};  // 네 Motor 객체
 uint8_t Control::GeneralControl::enable[4] = {0};  // Motor Enable Pin 초기화
 int16_t Control::GeneralControl::limit[3] = {0};   // Motor 제한 스위치 초기화
-AccelStepper motor_1f_right = AccelStepper(1, ArduinoMega::MotorPin::STEP_1F_R, ArduinoMega::MotorPin::DIR_1F_R);
-AccelStepper motor_1f_left = AccelStepper(1, ArduinoMega::MotorPin::STEP_1F_L, ArduinoMega::MotorPin::DIR_1F_L);
-AccelStepper motor_2f_right = AccelStepper(1, ArduinoMega::MotorPin::STEP_2F_R, ArduinoMega::MotorPin::DIR_2F_R);
-AccelStepper motor_2f_left = AccelStepper(1, ArduinoMega::MotorPin::STEP_2F_L, ArduinoMega::MotorPin::DIR_2F_L);
+
+AccelStepper motor_1f_right = AccelStepper(
+    AccelStepper::MotorInterfaceType::DRIVER,   // Motor Interface 타입을 DRIVER로 설정 (Step 및 Direction 제어)
+    ArduinoMega::MotorPin::STEP_1F_R,           // 1F 오른쪽 Motor의 Step Pin
+    ArduinoMega::MotorPin::DIR_1F_R             // 1F 오른쪽 Motor의 Direction Pin
+    );
+AccelStepper motor_1f_left = AccelStepper(
+    AccelStepper::MotorInterfaceType::DRIVER, 
+    ArduinoMega::MotorPin::STEP_1F_L, 
+    ArduinoMega::MotorPin::DIR_1F_L
+    );
+AccelStepper motor_2f_right = AccelStepper(
+    AccelStepper::MotorInterfaceType::DRIVER, 
+    ArduinoMega::MotorPin::STEP_2F_R, 
+    ArduinoMega::MotorPin::DIR_2F_R
+    );
+AccelStepper motor_2f_left = AccelStepper(
+    AccelStepper::MotorInterfaceType::DRIVER, 
+    ArduinoMega::MotorPin::STEP_2F_L, 
+    ArduinoMega::MotorPin::DIR_2F_L
+    );
 
 // Floor 클래스 메서드 정의
 void Control::Floor::SetFloor(AccelStepper& m_left, AccelStepper& m_right, const uint8_t en_left, const uint8_t en_right, const int16_t lim_y, const int16_t lim_x)
@@ -150,9 +167,6 @@ void Control::Floor::MoveToInitial(const AxisIndex axis, bool second=false) {
     
     if (lim != -1 && digitalRead(lim) == HIGH)
     {   
-        // motor[LEFT]->setSpeed(Parameter::MOTOR_SPEED * Parameter::MICROSTEP);
-        // motor[RIGHT]->setSpeed(Parameter::MOTOR_SPEED * Parameter::MICROSTEP);
-
         // 충분히 큰 거리 설정
         if (axis == X)
         {
@@ -203,12 +217,12 @@ void Control::Floor::MoveToInitial(const AxisIndex axis, bool second=false) {
     }
     if (!second) {
         if (axis == X)
-            Move(Floor::X, -3.125*Parameter::MICROSTEP);
+            Move(Floor::X, -Parameter::INITIAL_DIST_1F);
         else
-            Move(Floor::Y, 3.125*Parameter::MICROSTEP);
+            Move(Floor::Y, Parameter::INITIAL_DIST_1F);
     }
     else {
-        Move(Floor::Y, -2*Parameter::MICROSTEP);
+        Move(Floor::Y, -Parameter::INITIAL_DIST_2F);
     }
     if (axis == X)
         State::SetX(Parameter::INIT_X);
@@ -334,14 +348,10 @@ void Control::GeneralControl::InitializeSystem()
     SetPinMode();
 
     // Set the speed and Microstepping
-    motor_1f_right.setMaxSpeed(500*16);
-    motor_1f_left.setMaxSpeed(500*16);
-    motor_2f_right.setMaxSpeed(500*16);
-    motor_2f_left.setMaxSpeed(500*16);
-    // Control::MotorControl::SetMotor(motor_1f_right, Parameter::MOTOR_MAX_SPEED);
-    // Control::MotorControl::SetMotor(motor_1f_left, Parameter::MOTOR_MAX_SPEED);  
-    // Control::MotorControl::SetMotor(motor_2f_right, Parameter::MOTOR_MAX_SPEED);
-    // Control::MotorControl::SetMotor(motor_2f_left, Parameter::MOTOR_MAX_SPEED);  
+    Control::MotorControl::SetMotor(motor_1f_right);
+    Control::MotorControl::SetMotor(motor_1f_left);  
+    Control::MotorControl::SetMotor(motor_2f_right);
+    Control::MotorControl::SetMotor(motor_2f_left);  
 
     first_floor.SetFloor(
         // Set the first floor with two motors and two position limiting switches
@@ -358,7 +368,7 @@ void Control::GeneralControl::InitializeSystem()
         );
 
     ControlLED(OFF);
-    ControlFan(ON);
+    // ControlFan(ON);
 
     ConfigSystem(
         first_floor, second_floor, 
@@ -439,7 +449,7 @@ void Control::GeneralControl::StartExposure()
     /*
      * Start LED exposure by non-blocking method
      */
-    ControlFan(OFF); // OFF the cooling fan while LED exposes due to lack of power
+    // ControlFan(OFF); // OFF the cooling fan while LED exposes due to lack of power
     ControlLED(ON);
     State::UpdateExposureStartTime(); // 노출 시작 시간을 저장
     State::SetExposing(true);
@@ -459,7 +469,7 @@ void Control::GeneralControl::EndExposure()
             Serial.println("Exposure completed, LED turned off.");
         }
     }
-    ControlFan(ON); // Turn on the fan again
+    // ControlFan(ON); // Turn on the fan again
     Serial.println("Exposure ended.");
 }
 
@@ -580,7 +590,6 @@ void Control::GeneralControl::Operate()
             // x Direction 끝까지 가지 않은 경우
             Serial.println("Moving to next position in X direction.");
             first_floor.Move(Floor::X, -1 * Parameter::DIE_X);
-            delay(500);
             State::IncreaseX();
         }
         else
@@ -591,7 +600,6 @@ void Control::GeneralControl::Operate()
                 // y Direction 끝까지 가지 않은 경우
                 Serial.println("Reached end of X direction, moving in Y direction.");
                 first_floor.Move(Floor::Y, Parameter::DIE_Y);
-                delay(500);
                 State::IncreaseY();
                 first_floor.MoveToInitial(Floor::X);
             }

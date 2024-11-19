@@ -40,25 +40,27 @@ scanner
   - `uint8_t INIT_X`: 초기 X 좌표
   - `uint8_t INIT_Y`: 초기 Y 좌표
   - `uint8_t MOTOR_STEPS`: 모터가 한 바퀴 회전하는 데 필요한 스텝 수
-  - `uint8_t DPM`: Step per Distance; 1 mm를 움직이는 데 필요한 스텝 수
   - `uint8_t DIES`: 웨이퍼 지름에 들어갈 수 있는 Die의 수
   - `uint8_t MICROSTEP`: 모터의 마이크로테핑 설정
   - `uint16_t MOTOR_MAX_SPEED`: 모터의 최대 속도
   - `uint16_t MOTOR_SPEED`: 모터의 통상 속도
   - `int 16_t INITIAL_MOVE_DISTANCE`: 초기 위치로 이동하기 위해 필요한 "충분히 큰 스텝"
+  - `float DPM`: Distance (step motor) per Millimeter; 1mm와 모터 기준 거리의 상관 계수
   - `double DIE_X`: Die의 X 방향 길이
   - `double DIE_Y`: Die의 Y 방향 길이
   - `double MASK_X`: 마스크(레티클)의 X 방향 길이
   - `double MASK_Y`: 마스크(레티클)의 Y 방향 길이
   - `double EXPOSURE_TIME`: 노광 시간
   - `double LINEAR_SD_RATIO`: Linear Scale Down Radio; 레티클:Die 길이 축소 비율
+  - `double INITIAL_DIST_1F`: 1층 각 축의 한계 위치로부터 초기 위치까지의 거리 [mm]
+  - `double INITIAL_DIST_2F`: 2층 한계 위치로부터 초기 위치까지의 거리 [mm]
 
 #### 2-1-2. Class: `MotorControl`
 
 Motor 설정 및 제어를 담당하는 클래스입니다. 모든 메서드가 `static`으로 선언됩니다. 
 
 - **Methods:**
-  - `void SetMotor(AccelStepper &motor, uint16_t max_speed)`: Motor의 최대 속도를 설정
+  - `void SetMotor(AccelStepper &motor)`: Motor의 최대 속도를 설정
   - `void SetMicroStep(const uint8_t* microstep_pin_arr, uint8_t microstep)`: Motor의 마이크로스테핑을 설정
 
 #### 2-1-3. Class: `GeneralControl`
@@ -89,7 +91,6 @@ Motor 설정 및 제어를 담당하는 클래스입니다. 모든 메서드가 
   - `void WaitForStart()`: 시작 버튼이 눌릴 때까지 대기
   - `void InitializePosition()`: 웨이퍼와 광원의 상대 위치를 초기화
   - `void ControlLED(uint8_t op)`: LED를 제어; `op`에 따라 ON/OFF를 설정
-  - `void ControlFan(uint8_t op)`: 팬을 제어; `op`에 따라 ON/OFF를 설정
   - `void StartExposure()`: Exposure 시작
   - `void EndExposure()`: Exposure 종료
   - `void CheckExposure()`: Exposure 종료 조건을 확인
@@ -152,7 +153,6 @@ Motor 설정 및 제어를 담당하는 클래스입니다. 모든 메서드가 
   - `uint8_t START`: 시작 버튼
   - `uint8_t RESTART`: 재시작 버튼
   - `uint8_t EXPOSURE_CTRL`: UV LED 제어를 위한 릴레이 제어 신호
-  - `uint8_t FAN_CTRL`: 쿨링 팬 제어를 위한 릴레이 제어 신호
   - `uint8_t LIMIT_1F_X`: 1층 x축 리미트 스위치
   - `uint8_t LIMIT_1F_Y`: 1층 y축 리미트 스위치
   - `uint8_t LIMIT_2F_Y`: 2층 y축 리미트 스위치
