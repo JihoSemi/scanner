@@ -136,6 +136,7 @@ namespace Control {
         static void StartExposure();                    // 노광 시작
         static void EndExposure();                      // 노광 종료
         static void CheckExposure();                    // 노광 상태 확인
+        static void ZAlign();                           // Z축 align
         static void ScanMove(bool reverse=false);       // 스캔을 위한 Motor 제어
         static void Scan();                             // 스캔
         static void Operate();                          // 시스템 동작

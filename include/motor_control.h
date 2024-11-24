@@ -4,6 +4,7 @@
  * Motor 객체를 선언하고 Motor 제어와 관련된 클래스를 선언
  */
 #include <AccelStepper.h>
+#include <Servo.h>
 #include "parameter.h"
 
 namespace Control {
@@ -16,6 +17,7 @@ namespace Control {
     public:
         static void SetMotor(AccelStepper& motor);          // Motor 설정
         static void SetMicroStep(const uint8_t* micro_step, uint8_t step=1);    // MicroStep 설정
+        static void moveServo(Servo& servo, int start, int end) ;       // z축 align을 위한 함수
     };
 };
 

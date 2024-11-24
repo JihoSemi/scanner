@@ -18,16 +18,18 @@ namespace Control {
         constexpr uint8_t MICROSTEP             = 16;   	// MicroStepping 설정
         constexpr uint16_t MOTOR_MAX_SPEED      = 500;	    // Motor 최대 속도 설정
         constexpr uint16_t MOTOR_SPEED          = 30; 	    // 통상 Motor 속도
+        constexpr uint8_t SERBVO_DELAY          = 10;       // Servo 이동 딜레이
         constexpr long INITIAL_MOVE_DISTANCE    = 200;      // 초기 위치 이동을 위한 충분히 큰 step 값
         constexpr float DPM                     = 0.3125;   // Step motor distance per millimeter
         constexpr double DIE_X                  = 10;       // die x dimension [mm]
-        constexpr double DIE_Y                  = 10;       // die y dimension [mm]
+        constexpr double DIE_Y                  = 7;       // die y dimension [mm]
         constexpr double MASK_X                 = 30;  	    // mask x dimension [mm]
         constexpr double MASK_Y                 = 30;  	    // mask y dimension [mm]
-        constexpr double EXPOSURE_TIME          = 10; 	    // exposure time [sec]
+        constexpr double EXPOSURE_TIME          = 5; 	    // exposure time [sec]
         constexpr double LINEAR_SD_RATIO        = 3;   	    // linear scale down ratio
-        constexpr double INITIAL_DIST_1F        = 100;      // 각 축의 한계 지점까지 이동한 뒤 초기 위치까지의 거리
-        constexpr double INITIAL_DIST_2F        = 40;
+        constexpr double INITIAL_DIST_1F_X      = 85;      // 각 축의 한계 지점까지 이동한 뒤 초기 위치까지의 거리
+        constexpr double INITIAL_DIST_1F_Y      = 25;
+        constexpr double INITIAL_DIST_2F        = 110;
     };
 }
 
@@ -46,19 +48,21 @@ namespace ArduinoMega {
         constexpr uint8_t ENABLE_1F_R   = 22; 	// Enable signal for the 1F right motor
         constexpr uint8_t ENABLE_1F_L   = 23; 	// Enable signal for the 1F left motor
         constexpr uint8_t ENABLE_2F_R   = 34; 	// Enable signal for the 2F right motor
-        constexpr uint8_t ENABLE_2F_L   = 45; 	// Enable signal for the 2F left motor
+        constexpr uint8_t ENABLE_2F_L   = 35; 	// Enable signal for the 2F left motor
         constexpr uint8_t STEP_1F_R     = 30;  	// Step signal for the 1F right motor
         constexpr uint8_t STEP_1F_L     = 31;  	// Step signal for the 1F left motor
         constexpr uint8_t STEP_2F_R     = 42;  	// Step signal for the 2F right motor
-        constexpr uint8_t STEP_2F_L     = 37;  	// Step signal for the 2F left motor
+        constexpr uint8_t STEP_2F_L     = 43;  	// Step signal for the 2F left motor
         constexpr uint8_t DIR_1F_R      = 32;  	// Direction signal for the 1F right motor
         constexpr uint8_t DIR_1F_L      = 33;  	// Direction signal for the 1F left motor
         constexpr uint8_t DIR_2F_R      = 44;  	// Direction signal for the 2F right motor
-        constexpr uint8_t DIR_2F_L      = 35;  	// Direction signal for the 2F left motor
+        constexpr uint8_t DIR_2F_L      = 45;  	// Direction signal for the 2F left motor
         constexpr uint8_t MICROSTEP_1F_R[] = {24, 26, 28}; 	// Microstepping signal for the 1F right motor
         constexpr uint8_t MICROSTEP_1F_L[] = {25, 27, 29}; 	// Microstepping signal for the 1F left motor
         constexpr uint8_t MICROSTEP_2F_R[] = {36, 38, 40}; 	// Microstepping signal for the 2F right motor
-        constexpr uint8_t MICROSTEP_2F_L[] = {43, 41, 39}; 	// Microstepping signal for the 2F left motor
+        constexpr uint8_t MICROSTEP_2F_L[] = {37, 39, 41}; 	// Microstepping signal for the 2F left motor
+
+        constexpr uint8_t SERVOPWM      = 10;   // PWM signal for the z-axis servo motor
     };
 }
 

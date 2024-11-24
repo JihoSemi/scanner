@@ -36,3 +36,17 @@ void Control::MotorControl::SetMicroStep(const uint8_t* microstep_pin_arr, uint8
     }
     Serial.println("Microstep settings applied successfully.");
 }
+
+void Control::MotorControl::moveServo(Servo& servo, int start, int end) {
+  if (start < end) {
+    for (int pos = start; pos <= end; pos++) {
+      servo.write(pos);
+      delay(Parameter::SERBVO_DELAY); // 딜레이 추가
+    }
+  } else {
+    for (int pos = start; pos >= end; pos--) {
+      servo.write(pos);
+      delay(Parameter::SERBVO_DELAY); // 딜레이 추가
+    }
+  }
+}

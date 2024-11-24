@@ -77,6 +77,9 @@ AccelStepper motor_2f_left = AccelStepper(
     ArduinoMega::MotorPin::DIR_2F_L
     );
 
+Servo motor_z; // z축 이동을 위한 서보 모터
+int current_angle = 30;
+
 // Floor 클래스 메서드 정의
 void Control::Floor::SetFloor(AccelStepper& m_left, AccelStepper& m_right, const uint8_t en_left, const uint8_t en_right, const int16_t lim_y, const int16_t lim_x)
 {
@@ -217,9 +220,9 @@ void Control::Floor::MoveToInitial(const AxisIndex axis, bool second=false) {
     }
     if (!second) {
         if (axis == X)
-            Move(Floor::X, -Parameter::INITIAL_DIST_1F);
+            Move(Floor::X, -Parameter::INITIAL_DIST_1F_X);
         else
-            Move(Floor::Y, Parameter::INITIAL_DIST_1F);
+            Move(Floor::Y, Parameter::INITIAL_DIST_1F_Y);
     }
     else {
         Move(Floor::Y, -Parameter::INITIAL_DIST_2F);
@@ -353,6 +356,9 @@ void Control::GeneralControl::InitializeSystem()
     Control::MotorControl::SetMotor(motor_2f_right);
     Control::MotorControl::SetMotor(motor_2f_left);  
 
+    motor_z.attach(ArduinoMega::MotorPin::SERVOPWM);
+    motor_z.write(current_angle);
+
     first_floor.SetFloor(
         // Set the first floor with two motors and two position limiting switches
         motor_1f_left, motor_1f_right,
@@ -473,6 +479,25 @@ void Control::GeneralControl::EndExposure()
     Serial.println("Exposure ended.");
 }
 
+void Control::GeneralControl::ZAlign() {
+    Serial.println("Enter z axis distance to move within 0 and 180");
+
+    while (!Serial.available()) {
+        // 입력 대기 (여기서 멈춤)
+    }
+    String input = Serial.readStringUntil('\n');
+    Serial.println(input);
+    input.trim();
+    int target_angle = constrain(input.toInt(), 0, 180); // 목표 각도 (0~180도 사이)
+
+    MotorControl::moveServo(motor_z, current_angle, target_angle);
+
+    current_angle = target_angle;
+    Serial.print("Z axis position moved to ");
+    Serial.print(target_angle);
+    Serial.println(".");
+}
+
 void Control::GeneralControl::ScanMove(bool reverse)
 {
     Serial.print("ScanMove called, reverse: ");
@@ -565,6 +590,7 @@ void Control::GeneralControl::Scan()
 
 void Control::GeneralControl::Operate()
 {
+    int n_valid_die = 0;
     Serial.println("Operate called.");
     /*
      * 전체 Wafer에 대한 동작을 수행하는 High level method
@@ -577,6 +603,12 @@ void Control::GeneralControl::Operate()
         // 현재 광원의 위치가 wafer를 벗어나지 않을 때까지
         if (WAFER_AREA[State::GetX()][State::GetY()])
         {
+            n_valid_die++;
+            if (n_valid_die == 1) {
+                ZAlign();
+                delay(500);
+            }
+            
             // 유효한 wafer 영역 위에 광원이 위치하는 경우 Scan 수행
             Serial.print("Valid wafer area detected at X: ");
             Serial.print(State::GetX());
