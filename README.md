@@ -42,6 +42,7 @@ scanner
   - `uint8_t MOTOR_STEPS`: 모터가 한 바퀴 회전하는 데 필요한 스텝 수
   - `uint8_t DIES`: 웨이퍼 지름에 들어갈 수 있는 Die의 수
   - `uint8_t MICROSTEP`: 모터의 마이크로테핑 설정
+  - `uint8_t SERVO_DELAY`: 서보 모터 움직임의 딜레이
   - `uint16_t MOTOR_MAX_SPEED`: 모터의 최대 속도
   - `uint16_t MOTOR_SPEED`: 모터의 통상 속도
   - `int 16_t INITIAL_MOVE_DISTANCE`: 초기 위치로 이동하기 위해 필요한 "충분히 큰 스텝"
@@ -52,7 +53,8 @@ scanner
   - `double MASK_Y`: 마스크(레티클)의 Y 방향 길이
   - `double EXPOSURE_TIME`: 노광 시간
   - `double LINEAR_SD_RATIO`: Linear Scale Down Radio; 레티클:Die 길이 축소 비율
-  - `double INITIAL_DIST_1F`: 1층 각 축의 한계 위치로부터 초기 위치까지의 거리 [mm]
+  - `double INITIAL_DIST_1F_X`: 1층 x 축의 한계 위치로부터 초기 위치까지의 거리 [mm]
+  - `double INITIAL_DIST_1F_Y`: 1층 y 축의 한계 위치로부터 초기 위치까지의 거리 [mm]
   - `double INITIAL_DIST_2F`: 2층 한계 위치로부터 초기 위치까지의 거리 [mm]
 
 #### 2-1-2. Class: `MotorControl`
@@ -62,6 +64,7 @@ Motor 설정 및 제어를 담당하는 클래스입니다. 모든 메서드가 
 - **Methods:**
   - `void SetMotor(AccelStepper &motor)`: Motor의 최대 속도를 설정
   - `void SetMicroStep(const uint8_t* microstep_pin_arr, uint8_t microstep)`: Motor의 마이크로스테핑을 설정
+  - `void moveServo(Servo& serco, int start, int end)`: 서보 모터를 이동
 
 #### 2-1-3. Class: `GeneralControl`
 
@@ -94,6 +97,7 @@ Motor 설정 및 제어를 담당하는 클래스입니다. 모든 메서드가 
   - `void StartExposure()`: Exposure 시작
   - `void EndExposure()`: Exposure 종료
   - `void CheckExposure()`: Exposure 종료 조건을 확인
+  - `void ZAline()`: Z축 Alignment를 수행
   - `void ScanMove(bool reverse=false)`: 스캔 동작에 필요한 모터 제어
     - `reverse` 신호에 따라 반대 방향으로도 모터 제어 수행 가능
   - `void Scan()`: 스캔 동작을 수행
@@ -178,6 +182,7 @@ Motor 제어를 위한 아두이노 메가의 Pin 할당 정보가 이 네임스
   - `uint8_t MICROSTEP_1F_L[3]`: 1층 왼쪽 Motor 마이크로스테핑 신호
   - `uint8_t MICROSTEP_2F_R[3]`: 2층 오른쪽 Motor 마이크로스테핑 신호
   - `uint8_t MICROSTEP_2F_L[3]`: 2층 왼쪽 Motor 마이크로스테핑 신호
+  - `uint8_t SERVOPWM`: 서보 모터 제어를 위한 PWM 신호
 
 ---
 

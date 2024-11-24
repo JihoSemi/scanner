@@ -16,9 +16,9 @@ namespace Control {
         constexpr uint8_t MOTOR_STEPS           = 200; 	    // 200/360 [Steps/Degree] <=> 1.8 [Degree/Step]
         constexpr uint8_t DIES                  = 10;  	    // wafer의 지름에 들어갈 수 있는 최대 다이 개수
         constexpr uint8_t MICROSTEP             = 16;   	// MicroStepping 설정
+        constexpr uint8_t SERBVO_DELAY          = 10;       // Servo 이동 딜레이
         constexpr uint16_t MOTOR_MAX_SPEED      = 500;	    // Motor 최대 속도 설정
         constexpr uint16_t MOTOR_SPEED          = 30; 	    // 통상 Motor 속도
-        constexpr uint8_t SERBVO_DELAY          = 10;       // Servo 이동 딜레이
         constexpr long INITIAL_MOVE_DISTANCE    = 200;      // 초기 위치 이동을 위한 충분히 큰 step 값
         constexpr float DPM                     = 0.3125;   // Step motor distance per millimeter
         constexpr double DIE_X                  = 10;       // die x dimension [mm]
